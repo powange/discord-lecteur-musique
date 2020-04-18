@@ -1,0 +1,13 @@
+{
+  "token": "",
+  "tokens": {
+    ":red_circle:": ""
+  },
+  "commands" : {
+    "skip" : ["skip", "next", "suivant"],
+    "stop" : ["stop", "arrêter", "fin", "end"],
+    "loop" : ["loop", "boucle", "répéter"],
+    "pause" : ["pause"],
+    "resume" : ["resume", "reprendre"]
+  }
+}

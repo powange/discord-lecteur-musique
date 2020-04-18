@@ -12,7 +12,7 @@
 
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
-const Playslist = require('./Playlist');
+const Playslist = require('./ressources/Playlist');
 
 const {token, commands} = require('./config.json');
 
@@ -20,7 +20,7 @@ let textChannelsID = require('./config-textchannel.json');
 
 const clientMain = new Discord.Client();
 
-const BotsManager = require('./BotsManager.js');
+const BotsManager = require('./ressources/BotsManager.js');
 const botsManager = new BotsManager(clientMain);
 
 clientMain.once('ready', () => {

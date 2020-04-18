@@ -13,7 +13,7 @@ class BotsManager {
         clientMain.playlists = new Discord.Collection();
         clientMain.prefix = ':white_circle:';
 
-        const {tokens} = require('./config.json');
+        const {tokens} = require('../config.json');
         this.clients = [clientMain];
 
         for (const color in tokens) {
