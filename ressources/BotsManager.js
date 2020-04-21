@@ -1,47 +1,59 @@
 const Discord = require('discord.js');
-const {VoiceChannel, GuildMember} = require('discord.js');
+const {VoiceChannel, GuildMember, Client} = require('discord.js');
 
 class BotsManager {
 
     /**
-     *
+     * @type {Client|null}
+     */
+    botMain = null
+
+    /**
+     * @type {Client[]}
+     */
+    clients = [];
+
+    /**
      * @param clientMain {Client}
      */
-    constructor(clientMain) {
+    constructor() {
+        const {bots} = require('../config.json');
 
-        clientMain.queue = new Discord.Collection();
-        clientMain.playlists = new Discord.Collection();
-        clientMain.prefix = ':white_circle:';
+        for (let key in bots) {
+            let botConfig = bots[key];
+            let bot = this.addBot(botConfig.icon, botConfig.token);
+            if(typeof(botConfig.main) !== "undefined" && botConfig.main){
+                this.botMain = bot;
+            }
+        }
 
-        const {tokens} = require('../config.json');
-        this.clients = [clientMain];
-
-        for (const color in tokens) {
-            let client = new Discord.Client();
-            client.queue = new Discord.Collection();
-            client.playlists = new Discord.Collection();
-            client.prefix = color;
-            client.once('ready', () => {
-                console.log(`Logged in as "${client.user.tag}"`);
-            });
-            client.login(tokens[color]);
-
-            this.clients.push(client);
+        if(this.botMainn === null){
+            throw new Error('No bot Main setting!');
         }
     }
 
     /**
-     *
-     * @param client {Client}
-     * @param guild {Guild}
-     * @returns {null|VoiceConnection}
+     * @param color {string}
+     * @param token {string}
      */
-    getVoiceChannelOfBot(client, guild) {
-        let connections = client.voice.connections;
-        if (connections.has(guild.id)) {
-            return connections.get(guild.id);
-        }
-        return null;
+    addBot(color, token){
+        let client = new Discord.Client();
+        client.playlists = new Discord.Collection();
+        client.prefix = color;
+        client.once('ready', () => {
+            console.log(`Logged in as "${client.user.tag}"`);
+        });
+        client.login(token);
+
+        this.clients.push(client);
+        return client;
+    }
+
+    /**
+     * @returns {Client}
+     */
+    getBotMain(){
+        return this.botMain;
     }
 
     /**
@@ -66,8 +78,6 @@ class BotsManager {
 
 
     /**
-     *
-     * @param voiceChannel {VoiceChannel}
      * @returns {null|Client}
      */
     getBotFree() {

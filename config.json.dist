@@ -1,8 +1,19 @@
 {
-  "token": "",
-  "tokens": {
-    ":red_circle:": ""
-  },
+  "bots": [
+    {
+      "token":  "",
+      "icon": ":white_circle:",
+      "main": true
+    },
+    {
+      "token":  "",
+      "icon": ":red_circle:"
+    },
+    {
+      "token":  "",
+      "icon": ":blue_circle:"
+    }
+  ],
   "commands" : {
     "skip" : ["skip", "next", "suivant"],
     "stop" : ["stop", "arrêter", "fin", "end"],

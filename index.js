@@ -9,23 +9,16 @@
 
 // ▶️ ⏸️ ⏹️ 🔂 🎵
 
-
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const Playslist = require('./ressources/Playlist');
-
-const {token, commands} = require('./config.json');
-
+const {commands} = require('./config.json');
 let textChannelsID = require('./config-textchannel.json');
-
-const clientMain = new Discord.Client();
-
 const BotsManager = require('./ressources/BotsManager.js');
-const botsManager = new BotsManager(clientMain);
 
-clientMain.once('ready', () => {
-    console.log(`Logged in main as "${clientMain.user.tag}"`);
-});
+const botsManager = new BotsManager();
+
+const clientMain = botsManager.getBotMain();
 
 clientMain.on('message', async message => {
     if (message.author.bot) return;
@@ -58,7 +51,7 @@ clientMain.on('message', async message => {
 
     if(!clientUser){
         console.log('No bot available!');
-        textChannel.send(`Aucun lecteur de musique n'est disponible`);
+        textChannel.send(`Aucun lecteur de musique n'est disponible.`);
         return;
     }
 
@@ -68,51 +61,39 @@ clientMain.on('message', async message => {
         return;
     }
 
-    /**
-     * @type {Playslist}
-     */
     const playlist = clientUser.playlists.get(message.guild.id);
 
     if (!playlist) {
         const playlist = new Playslist(textChannel, voiceChannel, clientUser.prefix);
         clientUser.playlists.set(message.guild.id, playlist);
     }
+    /** @var playlist {Playslist} */
 
     if (commands.skip.indexOf(message.content) >= 0) {
-        playlist.skip();
+        playlist.skip(message.member);
     }
     else if (commands.pause.indexOf(message.content) >= 0) {
-        playlist.pause();
+        playlist.pause(message.member);
     }
     else if (commands.resume.indexOf(message.content) >= 0) {
-        playlist.resume();
+        playlist.resume(message.member);
     }
     else if (commands.stop.indexOf(message.content) >= 0) {
-        playlist.stop();
+        playlist.stop(message.member);
     }
     else if (commands.loop.indexOf(message.content) >= 0) {
-        playlist.swotchLoop();
+        playlist.switchLoop();
     } else if (ytdl.validateURL(message.content)) {
 
-        // Join the same voice channel of the author of the message
-
-        // console.log(botsManager.clients);
         const clientUser = botsManager.getBotForUser(message.guild, message.member);
-        // console.log(clientUser);
 
         execute(
             clientUser,
             clientUser.guilds.cache.get(message.guild.id),
             botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
-            message.content
+            message.content,
+            message.member
         );
-
-        // botsManager.getChannelFromBot(clientUser, message.member.voice.channel).join();
-        //
-        // const broadcast = client.voice.createBroadcast();
-        // const dispatcher = broadcast.play('./ressources/a.webm');
-
-        // connection.play(broadcast);
     }
 
 
@@ -135,21 +116,20 @@ clientMain.on('voiceStateUpdate', (oldMember, newMember) => {
     }
 });
 
-// function senMessage(client, guild, messageContent) {
-//     messageContent = ' ' + client.prefix + '  ' + messageContent;
-//     console.log(messageContent);
-//     clientMain
-//         .guilds.cache.get(guild.id)
-//         .channels.cache.get(textChannelsID[guild.id])
-//         .send(messageContent);
-// }
-
-
-async function execute(client, guild, voiceChannel, url) {
+/**
+ *
+ * @param client {Client}
+ * @param guild {Guild}
+ * @param voiceChannel {VoiceChannel}
+ * @param url {string}
+ * @param guildMember {GuildMember}
+ * @returns {Promise<void>}
+ */
+async function execute(client, guild, voiceChannel, url, guildMember) {
     console.log(client);
     let playlist = client.playlists.get(guild.id);
-    if (!playlist) {
 
+    if (!playlist) {
         const playlist = new Playslist();
         playlist.textChannel = clientMain
             .guilds.cache.get(guild.id)
@@ -161,53 +141,11 @@ async function execute(client, guild, voiceChannel, url) {
         client.playlists.set(guild.id, playlist);
 
         await playlist.addSong(url);
-        playlist.play();
-        console.log(playlist);
+        playlist.play(guildMember);
     } else {
-        playlist.addSong(url);
+        playlist.addSong(url, guildMember);
     }
 }
-
-// async function skip(client, guild, message) {
-//     if (!message.member.voice.channel)
-//         throw new Error("You have to be in a voice channel to stop the music!");
-//     const serverQueue = client.queue.get(guild.id);
-//     if (!serverQueue)
-//         throw new Error("There is no song that I could skip!");
-//     await serverQueue.connection.dispatcher.end();
-//     let song = serverQueue.songs[0];
-//     senMessage(client, guild, `:track_next: **${song.title}** ${song.url}`);
-// }
-//
-// function stop(client, guild, message) {
-//     if (!message.member.voice.channel)
-//         throw new Error("You have to be in a voice channel to stop the music!");
-//
-//     const serverQueue = client.queue.get(guild.id);
-//     serverQueue.songs = [];
-//     serverQueue.connection.dispatcher.end();
-//     let song = serverQueue.songs[0];
-//     senMessage(client, guild, `:stop_button:`);
-// }
-//
-// function play(client, guild, song) {
-//     const serverQueue = client.queue.get(guild.id);
-//     if (!song) {
-//         this.voiceChannel.leave();
-//         return;
-//     }
-//
-//     const dispatcher = serverQueue.connection
-//         .play(ytdl(song.url))
-//         .on("finish", () => {
-//             serverQueue.songs.shift();
-//             play(client, guild, serverQueue.songs[0]);
-//         })
-//         .on("error", error => console.error(error));
-//     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-//     console.log(serverQueue.voiceChannel);
-//     senMessage(client, guild, `▶ **${song.title}** ${song.url}`);
-// }
 
 /**
  *
@@ -227,7 +165,5 @@ function setConfigTextChannel(textChannelsID, guild, textChannel) {
     });
     return textChannelsID;
 }
-
-clientMain.login(token);
 
 
