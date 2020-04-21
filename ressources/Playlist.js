@@ -181,7 +181,7 @@ module.exports = class PLaylist {
      * @param guildMember {GuildMember}
      */
     switchLoop(guildMember){
-        this.loop = !loop;
+        this.loop = !this.loop;
         let song = this.songs[0];
         if(this.loop){
             this.senMessage(`Loop enable on **${song.title}** ${song.url} ${guildMember}`);
