@@ -81,7 +81,7 @@ clientMain.on('message', async message => {
         playlist.stop(message.member);
     }
     else if (commands.loop.indexOf(message.content) >= 0) {
-        playlist.switchLoop();
+        playlist.switchLoop(message.member);
     } else if (ytdl.validateURL(message.content)) {
 
         const clientUser = botsManager.getBotForUser(message.guild, message.member);
