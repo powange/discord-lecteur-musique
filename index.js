@@ -33,14 +33,12 @@ clientMain.on('message', async message => {
     }
 
     if (textChannelsID[message.guild.id] !== message.channel.id) {
-        console.log(message.content);
-        console.log('Message dans le mauvais channel. On ne prend pas en compte.');
+        // console.log('Message dans le mauvais channel. On ne prend pas en compte.');
         return;
     }
 
     if (!message.member.voice.channel) {
-        console.log('You need to be in a voice channel to play music!');
-        message.delete();
+        senMessageError(message, `You need to be in a voice channel to play music!`);
         return;
     }
 
@@ -50,14 +48,13 @@ clientMain.on('message', async message => {
     const voiceChannel = botsManager.getChannelFromBot(clientUser, message.member.voice.channel);
 
     if(!clientUser){
-        console.log('No bot available!');
-        textChannel.send(`Aucun lecteur de musique n'est disponible.`);
+        senMessageError(message, `Aucun lecteur de musique n'est disponible.`);
         return;
     }
 
     const permissions = voiceChannel.permissionsFor(clientUser.user);
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-        textChannel.send(`I need the permissions to join and speak in your voice channel!`);
+        senMessageError(message, `I need the permissions to join and speak in your voice channel!`);
         return;
     }
 
@@ -166,4 +163,19 @@ function setConfigTextChannel(textChannelsID, guild, textChannel) {
     return textChannelsID;
 }
 
+
+
+/**
+ * @param message {Discord.Message}
+ * @param messageContent {string}
+ */
+function senMessageError(message, messageContent){
+    console.log(messageContent);
+    message.reply(messageContent)
+        .then(msg => {
+            msg.delete({timeout: 5000}).then(msg => {
+                message.delete();
+            }).catch(err => console.log(err));
+        }).catch(err => console.log(err));
+}
 

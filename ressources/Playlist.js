@@ -33,7 +33,7 @@ module.exports = class PLaylist {
     /**
      * @type {number}
      */
-    volume = 0.2;
+    volume = 0.1;
 
     /**
      * @type {boolean}
@@ -102,6 +102,7 @@ module.exports = class PLaylist {
         const song = this.songs[0];
         if (!song) {
             this.voiceChannel.leave();
+
             return;
         }
 
