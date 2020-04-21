@@ -9,10 +9,12 @@
 
 // ▶️ ⏸️ ⏹️ 🔂 🎵
 
+const fs = require('fs');
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const Playslist = require('./ressources/Playlist');
 const {commands} = require('./config.json');
+initConfigTextChannel();
 let textChannelsID = require('./config-textchannel.json');
 const BotsManager = require('./ressources/BotsManager.js');
 
@@ -151,7 +153,6 @@ async function execute(client, guild, voiceChannel, url, guildMember) {
  * @param textChannel {TextChannel}
  */
 function setConfigTextChannel(textChannelsID, guild, textChannel) {
-    let fs = require('fs');
 
     textChannelsID[guild.id] = textChannel.id;
 
@@ -161,6 +162,16 @@ function setConfigTextChannel(textChannelsID, guild, textChannel) {
         }
     });
     return textChannelsID;
+}
+
+function initConfigTextChannel() {
+    if (!fs.existsSync('./config-textchannel.json')) {
+        fs.writeFileSync('./config-textchannel.json', '{}', function (err) {
+            if (err) {
+                console.log(err);
+            }
+        });
+    }
 }
 
 
