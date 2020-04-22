@@ -9,12 +9,12 @@ module.exports = class PLaylist {
     /**
      * @type {TextChannel}
      */
-    textChannel;
+    textChannel = null;
 
     /**
      * @type {VoiceChannel}
      */
-    voiceChannel;
+    voiceChannel = null;
 
     /**
      * @type {VoiceConnection|null}
