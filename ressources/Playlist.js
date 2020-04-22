@@ -7,14 +7,27 @@ const botsManager = BotsManager.getInstance();
 
 module.exports = class PLaylist {
     /**
+     * @param textChannel {TextChannel}
+     * @param voiceChannel {VoiceChannel}
+     * @param prefix {string}
+     * @param color {string}
+     */
+    constructor(textChannel, voiceChannel, prefix, color) {
+        this.textChannel = textChannel;
+        this.voiceChannel = voiceChannel;
+        this.prefix = prefix;
+        this.color = color;
+    }
+
+    /**
      * @type {TextChannel}
      */
-    textChannel = null;
+    textChannel;
 
     /**
      * @type {VoiceChannel}
      */
-    voiceChannel = null;
+    voiceChannel;
 
     /**
      * @type {VoiceConnection|null}
@@ -62,19 +75,6 @@ module.exports = class PLaylist {
      * @type {Message}
      */
     messageRecap = null;
-
-    /**
-     * @param textChannel {TextChannel}
-     * @param voiceChannel {VoiceChannel}
-     * @param prefix {string}
-     * @param color {string}
-     */
-    constructor(textChannel, voiceChannel, prefix, color) {
-        this.textChannel = textChannel;
-        this.voiceChannel = voiceChannel;
-        this.prefix = prefix;
-        this.color = color;
-    }
 
     async join(){
         this.connection = await this.voiceChannel.join();
