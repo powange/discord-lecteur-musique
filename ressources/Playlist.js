@@ -6,6 +6,7 @@ const BotsManager = require('./BotsManager.js');
 const botsManager = BotsManager.getInstance();
 
 module.exports = class PLaylist {
+
     /**
      * @param textChannel {TextChannel}
      * @param voiceChannel {VoiceChannel}
@@ -20,6 +21,11 @@ module.exports = class PLaylist {
     }
 
     /**
+     * @type {VoiceConnection|null}
+     */
+    connection = null;
+
+    /**
      * @type {VoiceChannel}
      */
     voiceChannel;
@@ -28,11 +34,6 @@ module.exports = class PLaylist {
      * @type {TextChannel}
      */
     textChannel;
-
-    /**
-     * @type {VoiceConnection|null}
-     */
-    connection = null;
 
 
     /**
