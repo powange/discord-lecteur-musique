@@ -20,14 +20,14 @@ module.exports = class PLaylist {
     }
 
     /**
-     * @type {TextChannel}
-     */
-    textChannel;
-
-    /**
      * @type {VoiceChannel}
      */
     voiceChannel;
+
+    /**
+     * @type {TextChannel}
+     */
+    textChannel;
 
     /**
      * @type {VoiceConnection|null}
