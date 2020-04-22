@@ -2,16 +2,19 @@
   "bots": [
     {
       "token":  "",
-      "icon": ":white_circle:",
+      "icon": ":green_circle:",
+      "color": "#00ff00",
       "main": true
     },
     {
       "token":  "",
-      "icon": ":red_circle:"
+      "icon": ":red_circle:",
+      "color": "#ff0000"
     },
     {
       "token":  "",
-      "icon": ":blue_circle:"
+      "icon": ":blue_circle:",
+      "color": "#0000ff"
     }
   ],
   "commands" : {

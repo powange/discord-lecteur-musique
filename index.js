@@ -9,16 +9,16 @@
 
 // ▶️ ⏸️ ⏹️ 🔂 🎵
 
-const fs = require('fs');
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const Playslist = require('./ressources/Playlist');
 const {commands} = require('./config.json');
-initConfigTextChannel();
-let textChannelsID = require('./config-textchannel.json');
-const BotsManager = require('./ressources/BotsManager.js');
 
-const botsManager = new BotsManager();
+let ConfigTextChannel = require('./ressources/configTextChannel');
+const configTextChannel = ConfigTextChannel.getInstance();
+
+const BotsManager = require('./ressources/BotsManager.js');
+const botsManager = BotsManager.getInstance();
 
 const clientMain = botsManager.getBotMain();
 
@@ -28,13 +28,15 @@ clientMain.on('message', async message => {
     if (message.content.startsWith('!channelBotMusique ')) {
         let channels = message.mentions.channels.filter(c => c.type === 'text');
         if (channels.size) {
-            textChannelsID = setConfigTextChannel(textChannelsID, message.guild, channels.first());
+            configTextChannel.setConfigTextChannel(message.guild, channels.first());
+            message.reply(`Mise à jour du channel : guild ${message.guild.id} channel ${channels.first().id}.`)
+            message.delete();
             console.log(`Mise à jour du channel : guild ${message.guild.id} channel ${channels.first().id}.`);
             return;
         }
     }
 
-    if (textChannelsID[message.guild.id] !== message.channel.id) {
+    if (configTextChannel.getTextChannelID(message.guild) !== message.channel.id) {
         // console.log('Message dans le mauvais channel. On ne prend pas en compte.');
         return;
     }
@@ -63,7 +65,7 @@ clientMain.on('message', async message => {
     const playlist = clientUser.playlists.get(message.guild.id);
 
     if (!playlist) {
-        const playlist = new Playslist(textChannel, voiceChannel, clientUser.prefix);
+        const playlist = new Playslist(textChannel, voiceChannel, clientUser.prefix, clientUser.color);
         clientUser.playlists.set(message.guild.id, playlist);
     }
     /** @var playlist {Playslist} */
@@ -82,17 +84,25 @@ clientMain.on('message', async message => {
     }
     else if (commands.loop.indexOf(message.content) >= 0) {
         playlist.switchLoop(message.member);
+    }
+    else if (commands.loop.indexOf(message.content) >= 0) {
+        playlist.switchLoop(message.member);
+    }
+    else if (commands.queue.indexOf(message.content) >= 0) {
+        playlist.getQueue(message.member);
+    }
+    else if (message.content === 'recap') {
+        botsManager.getMessageRecap(message.guild);
     } else if (ytdl.validateURL(message.content)) {
 
-        const clientUser = botsManager.getBotForUser(message.guild, message.member);
-
-        execute(
+        await execute(
             clientUser,
             clientUser.guilds.cache.get(message.guild.id),
             botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
             message.content,
             message.member
         );
+
     }
 
 
@@ -125,16 +135,16 @@ clientMain.on('voiceStateUpdate', (oldMember, newMember) => {
  * @returns {Promise<void>}
  */
 async function execute(client, guild, voiceChannel, url, guildMember) {
-    console.log(client);
     let playlist = client.playlists.get(guild.id);
 
     if (!playlist) {
         const playlist = new Playslist();
         playlist.textChannel = clientMain
             .guilds.cache.get(guild.id)
-            .channels.cache.get(textChannelsID[guild.id]);
+            .channels.cache.get(configTextChannel.getTextChannelID(guild));
         playlist.voiceChannel = voiceChannel;
         playlist.prefix = client.prefix;
+        playlist.color = client.color;
 
 
         client.playlists.set(guild.id, playlist);
@@ -145,36 +155,6 @@ async function execute(client, guild, voiceChannel, url, guildMember) {
         playlist.addSong(url, guildMember);
     }
 }
-
-/**
- *
- * @param textChannelsID
- * @param guild {Guild}
- * @param textChannel {TextChannel}
- */
-function setConfigTextChannel(textChannelsID, guild, textChannel) {
-
-    textChannelsID[guild.id] = textChannel.id;
-
-    fs.writeFile('./config-textchannel.json', JSON.stringify(textChannelsID), function (err) {
-        if (err) {
-            console.log(err);
-        }
-    });
-    return textChannelsID;
-}
-
-function initConfigTextChannel() {
-    if (!fs.existsSync('./config-textchannel.json')) {
-        fs.writeFileSync('./config-textchannel.json', '{}', function (err) {
-            if (err) {
-                console.log(err);
-            }
-        });
-    }
-}
-
-
 
 /**
  * @param message {Discord.Message}
