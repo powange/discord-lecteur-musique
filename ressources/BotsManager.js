@@ -154,8 +154,9 @@ class BotsManager {
 
         for (const key in this.clients) {
             let client = this.clients[key];
-            client.playlists.filter(p => p.voiceChannel.guild.id === guild.id).each(playlist => {
-
+            client.playlists.filter(p => {
+                return p.voiceChannel.guild.id === guild.id && p.songs.length > 0
+            }).each(playlist => {
                 let list = [];
                 for (const k in playlist.songs) {
                     let song = playlist.songs[k];

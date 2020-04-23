@@ -5,7 +5,7 @@ const format = require('format-duration');
 const BotsManager = require('./BotsManager.js');
 const botsManager = BotsManager.getInstance();
 
-module.exports = class PLaylist {
+module.exports = class Playlist {
 
     /**
      * @param textChannel {TextChannel}
@@ -77,7 +77,7 @@ module.exports = class PLaylist {
      */
     messageRecap = null;
 
-    async join(){
+    async join() {
         this.connection = await this.voiceChannel.join();
     }
 
@@ -86,7 +86,7 @@ module.exports = class PLaylist {
      * @param guildMember {GuildMember}
      * @returns {Promise<void>}
      */
-    async addSong(url, guildMember){
+    async addSong(url, guildMember) {
         const songInfo = await ytdl.getInfo(url);
         const song = {
             title: songInfo.title,
@@ -96,10 +96,10 @@ module.exports = class PLaylist {
         };
         this.songs.push(song);
 
-        if(this.streamDispatcher === null){
+        if (this.streamDispatcher === null) {
             this.play(guildMember);
             this.sendMessageEmbed(song, ':arrow_forward: playing.');
-        }else{
+        } else {
             this.sendMessageEmbed(song, ':musical_note: has been added to the queue.');
         }
     }
@@ -125,7 +125,7 @@ module.exports = class PLaylist {
             }))
             .on("finish", () => {
                 this.streamDispatcher = null;
-                if(!this.loop){
+                if (!this.loop) {
                     this.songs.shift();
                 }
                 this.play();
@@ -137,8 +137,8 @@ module.exports = class PLaylist {
     /**
      * @param guildMember {GuildMember}
      */
-    pause(guildMember){
-        if(this.streamDispatcher !== null){
+    pause(guildMember) {
+        if (this.streamDispatcher !== null) {
             this.streamDispatcher.pause();
             const song = this.songs[0];
             this.sendMessage(`:pause_button: pause song`, `${guildMember}`);
@@ -148,8 +148,8 @@ module.exports = class PLaylist {
     /**
      * @param guildMember {GuildMember}
      */
-    resume(guildMember){
-        if(this.streamDispatcher !== null){
+    resume(guildMember) {
+        if (this.streamDispatcher !== null) {
             this.streamDispatcher.resume();
             const song = this.songs[0];
             this.sendMessageEmbed(song, ':arrow_forward: resume.', guildMember);
@@ -162,9 +162,9 @@ module.exports = class PLaylist {
     stop(guildMember) {
         this.songs = [];
         this.connection.dispatcher.end();
-        if(guildMember){
+        if (guildMember) {
             this.sendMessage(`:stop_button: Le lecteur de musique est de nouveau disponible.`, `stoppping by ${guildMember}`);
-        }else{
+        } else {
             this.sendMessage(`:stop_button: Le lecteur de musique est de nouveau disponible.`);
         }
     }
@@ -180,18 +180,17 @@ module.exports = class PLaylist {
             this.sendMessageEmbed(song, ':track_next: skipping.', guildMember);
         })
         this.connection.dispatcher.end();
-
     }
 
     /**
      * @param guildMember {GuildMember}
      */
-    switchLoop(guildMember){
+    switchLoop(guildMember) {
         this.loop = !this.loop;
         let song = this.songs[0];
-        if(this.loop){
+        if (this.loop) {
             this.sendMessageEmbed(song, 'Loop enable.', guildMember);
-        }else{
+        } else {
             this.sendMessage(`Loop disable`, `${guildMember}`);
         }
     }
@@ -199,12 +198,12 @@ module.exports = class PLaylist {
     /**
      * @param guildMember {GuildMember}
      */
-    getQueue(guildMember){
+    getQueue(guildMember) {
         let messageContent = this.prefix + "  Voici la playlist actuelle :\n";
         let song = this.songs[0];
         let duration = format(song.length_seconds * 1000);
         messageContent += `\:arrow_forward: **${song.title}** ${duration} ${song.url}\n`
-        for (let key in this.songs.slice(1)){
+        for (let key in this.songs.slice(1)) {
             let song = this.songs[key];
             let duration = format(song.length_seconds * 1000);
             messageContent += `\:musical_note: **${song.title}** ${duration} ${song.url}\n`;
@@ -216,11 +215,11 @@ module.exports = class PLaylist {
      * @param title {string}
      * @param description {string}
      */
-    sendMessage(title, description){
+    sendMessage(title, description) {
         const messageEmbed = new MessageEmbed()
             .setColor(this.color)
             .setTitle(title);
-        if(description){
+        if (description) {
             messageEmbed.setDescription(description);
         }
         this.textChannel.send(messageEmbed);
@@ -232,9 +231,9 @@ module.exports = class PLaylist {
      * @param action {string}
      * @param guildMember {GuildMember}
      */
-    sendMessageEmbed(song, action, guildMember){
+    sendMessageEmbed(song, action, guildMember) {
         let duration = format(song.length_seconds * 1000);
-        if(!guildMember){
+        if (!guildMember) {
             guildMember = song.guildMember;
         }
         const messageEmbed = new MessageEmbed()

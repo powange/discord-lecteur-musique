@@ -22,6 +22,7 @@
     "stop" : ["stop", "arrêter", "fin", "end"],
     "loop" : ["loop", "boucle", "répéter"],
     "pause" : ["pause"],
-    "resume" : ["resume", "reprendre"]
+    "resume" : ["resume", "reprendre"],
+    "queue" : ["queue", "liste"]
   }
 }
