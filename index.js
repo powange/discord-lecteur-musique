@@ -12,7 +12,7 @@
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const Playslist = require('./ressources/Playlist');
-const {commands} = require('./config.json');
+const {commands, APIKey} = require('./config.json');
 
 let ConfigTextChannel = require('./ressources/configTextChannel');
 const configTextChannel = ConfigTextChannel.getInstance();
@@ -21,6 +21,9 @@ const BotsManager = require('./ressources/BotsManager.js');
 const botsManager = BotsManager.getInstance();
 
 const clientMain = botsManager.getBotMain();
+
+const Youtube = require('simple-youtube-api');
+const youtube = new Youtube(APIKey);
 
 clientMain.on('message', async message => {
     if (message.author.bot) return;
@@ -102,7 +105,19 @@ clientMain.on('message', async message => {
             message.content,
             message.member
         );
-
+    } else {
+        youtube.searchVideos(message.content, 1).then(videos => {
+            if (videos.length) {
+                let video = videos[0];
+                await execute(
+                    clientUser,
+                    clientUser.guilds.cache.get(message.guild.id),
+                    botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
+                    video.url,
+                    message.member
+                );
+            }
+        });
     }
 
 

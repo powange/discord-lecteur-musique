@@ -176,7 +176,11 @@ class BotsManager {
                     }
                     list.push(` [${song.title}](${song.url}) ${duration} add by ${nickname}`);
                 }
-                messageEmbed.addField(playlist.prefix + ' ' + client.user.username, list.join("\n"), false);
+                messageEmbed.addField(
+                    `${playlist.prefix} ${client.user.username} | connecté dans ${playlist.voiceChannel.name}`,
+                    list.join("\n"),
+                    false
+                );
             });
         }
 

@@ -78,7 +78,9 @@ module.exports = class Playlist {
     messageRecap = null;
 
     async join() {
-        this.connection = await this.voiceChannel.join();
+        this.connection = await this.voiceChannel.join().catch (err => {
+            console.log(err);
+        });
     }
 
     /**
@@ -113,8 +115,9 @@ module.exports = class Playlist {
 
         const song = this.songs[0];
         if (!song) {
+            let username = this.voiceChannel.client.user.username;
             this.voiceChannel.leave();
-
+            this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`);
             return;
         }
 
@@ -161,11 +164,12 @@ module.exports = class Playlist {
      */
     stop(guildMember) {
         this.songs = [];
+        let username = this.connection.client.user.username;
         this.connection.dispatcher.end();
         if (guildMember) {
-            this.sendMessage(`:stop_button: Le lecteur de musique est de nouveau disponible.`, `stoppping by ${guildMember}`);
+            this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`, `stoppping by ${guildMember}`);
         } else {
-            this.sendMessage(`:stop_button: Le lecteur de musique est de nouveau disponible.`);
+            this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`);
         }
     }
 
