@@ -106,18 +106,19 @@ clientMain.on('message', async message => {
             message.member
         );
     } else {
-        youtube.searchVideos(message.content, 1).then(videos => {
-            if (videos.length) {
-                let video = videos[0];
-                await execute(
-                    clientUser,
-                    clientUser.guilds.cache.get(message.guild.id),
-                    botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
-                    video.url,
-                    message.member
-                );
-            }
-        });
+        const videos = youtube.searchVideos(message.content, 1);
+
+
+        if (videos.length) {
+            let video = videos[0];
+            await execute(
+                clientUser,
+                clientUser.guilds.cache.get(message.guild.id),
+                botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
+                video.url,
+                message.member
+            );
+        }
     }
 
 
