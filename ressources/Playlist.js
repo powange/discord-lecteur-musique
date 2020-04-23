@@ -120,7 +120,7 @@ module.exports = class Playlist {
 
         this.streamDispatcher = await this.connection
             .play(ytdl(song.url, {
-                quality: 'highestaudio',
+                quality: 'lowest',
                 filter: 'audioonly'
             }))
             .on("finish", () => {
