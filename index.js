@@ -106,7 +106,7 @@ clientMain.on('message', async message => {
             message.member
         );
     } else {
-        const videos = youtube.searchVideos(message.content, 1);
+        const videos = await youtube.searchVideos(message.content, 1).catch(err => console.log(err));
 
 
         if (videos.length) {
