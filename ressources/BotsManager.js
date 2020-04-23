@@ -30,7 +30,9 @@ class BotsManager {
     clients = [];
 
     constructor() {
-        const {bots} = require('../config.json');
+        const {bots, commands} = require('../config.json');
+
+        this.commands = commands;
 
         for (let key in bots) {
             let botConfig = bots[key];
@@ -143,11 +145,18 @@ class BotsManager {
         const textChannelID = configTextChannel.getTextChannelID(guild);
         const messageRecapID = configTextChannel.getMessageRecapID(guild);
 
+
         const messageEmbed = new Discord.MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Comment ça marche ?')
-            .setDescription(`Vous pouvez écouter de la musique si vous êtes en vocal, en rentrant simplement ici, le lien YouTube que vous voulez.\n` +
-            `Vous pouvezz également faire les commandes suivantes : pause, resume, skip, queue, stop.`);
+            .setDescription(`Vous pouvez écouter de la musique si vous êtes en vocal, en rentrant simplement ici, le lien YouTube que vous voulez.\n\n` +
+            `Vous pouvez également faire les actions suivantes : \n`
+                `- Passer à la musique suivante : ` + this.commands.skip.map(x => '"' + x + '"').join(', ') + `\n` +
+                `- Arrêter le jukebox : ` + this.commands.stop.map(x => '"' + x + '"').join(', ') + `\n` +
+                `- Répéter en boucle la musique en cours : ` + this.commands.loop.map(x => '"' + x + '"').join(', ') + `\n` +
+                `- Mettre en pause la lecture : ` + this.commands.pause.map(x => '"' + x + '"').join(', ') + `\n` +
+                `- Reprendre la lecture : ` + this.commands.resume.map(x => '"' + x + '"').join(', ') + `\n` +
+                `- Découvrir la playliste complète : ` + this.commands.queue.map(x => '"' + x + '"').join(', ') + `\n`);
 
 
         messageEmbed.addField('---------------------------------------------------------', 'Les playlists en cours', false);
