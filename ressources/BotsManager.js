@@ -150,7 +150,7 @@ class BotsManager {
             .setColor('#0099ff')
             .setTitle('Comment ça marche ?')
             .setDescription(`Vous pouvez écouter de la musique si vous êtes en vocal, en rentrant simplement ici, le lien YouTube que vous voulez.\n\n` +
-            `Vous pouvez également faire les actions suivantes : \n`
+            `Vous pouvez également faire les actions suivantes : \n` +
                 `- Passer à la musique suivante : ` + this.commands.skip.map(x => '"' + x + '"').join(', ') + `\n` +
                 `- Arrêter le jukebox : ` + this.commands.stop.map(x => '"' + x + '"').join(', ') + `\n` +
                 `- Répéter en boucle la musique en cours : ` + this.commands.loop.map(x => '"' + x + '"').join(', ') + `\n` +
