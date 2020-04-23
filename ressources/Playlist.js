@@ -78,7 +78,7 @@ module.exports = class Playlist {
     messageRecap = null;
 
     async join() {
-        this.connection = await this.voiceChannel.join().catch (err => {
+        this.connection = await this.voiceChannel.join().catch(err => {
             console.log(err);
         });
     }
@@ -89,20 +89,24 @@ module.exports = class Playlist {
      * @returns {Promise<void>}
      */
     async addSong(url, guildMember) {
-        const songInfo = await ytdl.getInfo(url);
-        const song = {
-            title: songInfo.title,
-            url: songInfo.video_url,
-            length_seconds: songInfo.length_seconds,
-            guildMember: guildMember
-        };
-        this.songs.push(song);
+        try {
+            const songInfo = await ytdl.getInfo(url);
+            const song = {
+                title: songInfo.title,
+                url: songInfo.video_url,
+                length_seconds: songInfo.length_seconds,
+                guildMember: guildMember
+            };
+            this.songs.push(song);
 
-        if (this.streamDispatcher === null) {
-            this.play(guildMember);
-            this.sendMessageEmbed(song, ':arrow_forward: playing.');
-        } else {
-            this.sendMessageEmbed(song, ':musical_note: has been added to the queue.');
+            if (this.streamDispatcher === null) {
+                this.play(guildMember);
+                this.sendMessageEmbed(song, ':arrow_forward: playing.');
+            } else {
+                this.sendMessageEmbed(song, ':musical_note: has been added to the queue.');
+            }
+        } catch (e) {
+            this.sendMessage(`${url} : ${e.message}`);
         }
     }
 
