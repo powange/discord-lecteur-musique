@@ -122,7 +122,7 @@ module.exports = class Playlist {
             .play(ytdl(song.url, {
                 quality: 'lowest',
                 filter: 'audioonly'
-            }))
+            }), { type: 'opus' })
             .on("finish", () => {
                 this.streamDispatcher = null;
                 if (!this.loop) {
