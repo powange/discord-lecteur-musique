@@ -104,7 +104,9 @@ clientMain.on('message', async message => {
             botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
             message.content,
             message.member
-        );
+        ).catch(err => {
+            senMessageError(message, err.message);
+        });
     } else {
         const videos = await youtube.searchVideos(message.content, 1).catch(err => console.log(err));
 
@@ -117,7 +119,9 @@ clientMain.on('message', async message => {
                 botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
                 video.url,
                 message.member
-            );
+            ).catch(err => {
+                senMessageError(message, err.message);
+            });
         }
     }
 
