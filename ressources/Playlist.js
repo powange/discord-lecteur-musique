@@ -1,5 +1,6 @@
 const {VoiceConnection, TextChannel, VoiceChannel, StreamDispatcher, Message, MessageEmbed} = require('discord.js');
 const ytdl = require('ytdl-core');
+const ytdldis = require('ytdl-core-discord');
 const format = require('format-duration');
 
 const BotsManager = require('./BotsManager.js');
@@ -119,10 +120,7 @@ module.exports = class Playlist {
         }
 
         this.streamDispatcher = await this.connection
-            .play(ytdl(song.url, {
-                quality: 'lowest',
-                filter: 'audioonly'
-            }), { type: 'opus' })
+            .play(ytdldis(song.url), { type: 'opus' })
             .on("finish", () => {
                 this.streamDispatcher = null;
                 if (!this.loop) {
@@ -131,6 +129,22 @@ module.exports = class Playlist {
                 this.play();
             })
             .on("error", error => console.error(error));
+
+        // this.streamDispatcher = await this.connection
+        //     .play(ytdl(song.url, {
+        //         quality: 'lowest',
+        //         filter: 'audioonly'
+        //     }), { type: 'opus' })
+        //     .on("finish", () => {
+        //         this.streamDispatcher = null;
+        //         if (!this.loop) {
+        //             this.songs.shift();
+        //         }
+        //         this.play();
+        //     })
+        //     .on("error", error => console.error(error));
+
+
         this.streamDispatcher.setVolume(this.volume);
     }
 
