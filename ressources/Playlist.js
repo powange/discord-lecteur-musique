@@ -224,9 +224,9 @@ module.exports = class Playlist {
         if (dispatcher !== null) {
             dispatcher.end();
         }
-        if(guildMember){
+        if (guildMember) {
             this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`, `stopping by ${guildMember}`);
-        }else{
+        } else {
             this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`);
         }
     }
@@ -271,23 +271,31 @@ module.exports = class Playlist {
             .setColor(this.color)
             .setTitle('Voici la liste de lecture :');
 
+        let fields = [];
+
         let song = this.songs[0];
         let duration = format(song.length_seconds * 1000);
-        messageContent.addField(
-            `\:arrow_forward: Durée : ${duration}`,
-            `[${song.title}](${song.url})`
-        );
+        fields.push({
+            "name": `\:arrow_forward: Durée : ${duration}`,
+            "value": `[${song.title}](${song.url})`
+        })
 
         for (const key in this.songs.slice(1)) {
             const song = this.songs[key];
             let duration = format(song.length_seconds * 1000);
-            messageContent.addField(
-                `Durée : ${duration}`,
-                `[${song.title}](${song.url})`
-            );
+            fields.push({
+                "name": `Durée : ${duration}`,
+                "value": `[${song.title}](${song.url})`
+            })
         }
 
-        guildMember.send(messageContent, {split: true});
+        guildMember.send(`Tu as demandé la liste de lecture de ${this.client.user.username}`, {
+            split: true,
+            embed: {
+                "title": "Voici la liste de lecture :",
+                "fields": fields
+            }
+        });
     }
 
     /**
