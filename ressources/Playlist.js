@@ -1,5 +1,6 @@
 const {VoiceConnection, TextChannel, VoiceChannel, StreamDispatcher, Message, MessageEmbed} = require('discord.js');
 const ytdl = require('ytdl-core');
+const PlaylistYoutube = require('simple-youtube-api/src/structures/Playlist');
 const format = require('format-duration');
 
 const BotsManager = require('./BotsManager.js');
@@ -8,17 +9,24 @@ const botsManager = BotsManager.getInstance();
 module.exports = class Playlist {
 
     /**
+     * @param client {Client}
      * @param textChannel {TextChannel}
      * @param voiceChannel {VoiceChannel}
      * @param prefix {string}
      * @param color {string}
      */
-    constructor(textChannel, voiceChannel, prefix, color) {
+    constructor(client, textChannel, voiceChannel, prefix, color) {
+        this.client = client;
         this.textChannel = textChannel;
         this.voiceChannel = voiceChannel;
         this.prefix = prefix;
         this.color = color;
     }
+
+    /**
+     * @type {Client}
+     */
+    client;
 
     /**
      * @type {VoiceConnection|null}
@@ -101,9 +109,53 @@ module.exports = class Playlist {
 
             if (this.streamDispatcher === null) {
                 this.play(guildMember);
-                this.sendMessageEmbed(song, ':arrow_forward: playing.');
+                this.sendMessageSong(song, ':arrow_forward: playing.');
             } else {
-                this.sendMessageEmbed(song, ':musical_note: has been added to the queue.');
+                this.sendMessageSong(song, ':musical_note: has been added to the queue.');
+            }
+        } catch (e) {
+            this.sendMessage(`${url} : ${e.message}`);
+        }
+    }
+
+    /**
+     * @param playlistYoutube {PlaylistYoutube}
+     * @param videos {videos}
+     * @param guildMember {GuildMember}
+     * @returns {Promise<void>}
+     */
+    async addPlaylist(playlistYoutube, videos, guildMember) {
+        try {
+            const songs = [];
+            const videoPromises = [];
+
+            videos.forEach(v => {
+                v.title !== 'Private video' && videoPromises.push(v.fetch({part: 'contentDetails'}));
+            });
+
+            await Promise.all(videoPromises)
+
+            videos.forEach(video => {
+                const song = {
+                    title: video.title,
+                    url: video.url,
+                    length_seconds: video.durationSeconds,
+                    guildMember: guildMember
+                };
+                this.songs.push(song);
+                songs.push(song);
+            });
+
+            let playlistData = {
+                title: playlistYoutube.title,
+                url: playlistYoutube.url
+            }
+
+            if (this.streamDispatcher === null) {
+                this.play(guildMember);
+                this.sendMessageSongs(playlistData, songs, ':arrow_forward: playing playlist.', guildMember);
+            } else {
+                this.sendMessageSongs(playlistData, songs, ':musical_note: has been added to the queue.', guildMember);
             }
         } catch (e) {
             this.sendMessage(`${url} : ${e.message}`);
@@ -121,14 +173,16 @@ module.exports = class Playlist {
         if (!song) {
             let username = this.voiceChannel.client.user.username;
             this.voiceChannel.leave();
+            this.client.reservation = false;
             this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`);
             return;
         }
 
         this.streamDispatcher = await this.connection
             .play(ytdl(song.url, {
-                quality: 'lowest',
-                filter: 'audioonly'
+                quality: 'highestaudio',
+                // filter: 'audioonly',
+                highWaterMark: 1024 * 1024 * 10 // 10 megabytes
             }))
             .on("finish", () => {
                 this.streamDispatcher = null;
@@ -159,7 +213,7 @@ module.exports = class Playlist {
         if (this.streamDispatcher !== null) {
             this.streamDispatcher.resume();
             const song = this.songs[0];
-            this.sendMessageEmbed(song, ':arrow_forward: resume.', guildMember);
+            this.sendMessageSong(song, ':arrow_forward: resume.', guildMember);
         }
     }
 
@@ -168,8 +222,14 @@ module.exports = class Playlist {
      */
     stop(guildMember) {
         this.songs = [];
+        if (this.connection === null) {
+            return;
+        }
         let username = this.connection.client.user.username;
-        this.connection.dispatcher.end();
+        let dispatcher = this.connection.dispatcher;
+        if (dispatcher !== null) {
+            dispatcher.end();
+        }
         if (guildMember) {
             this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`, `stoppping by ${guildMember}`);
         } else {
@@ -185,7 +245,7 @@ module.exports = class Playlist {
         this.skipStatut = guildMember;
         this.connection.dispatcher.on("finish", () => {
             let song = this.songs[0];
-            this.sendMessageEmbed(song, ':track_next: skipping.', guildMember);
+            this.sendMessageSong(song, ':track_next: skipping.', guildMember);
         })
         this.connection.dispatcher.end();
     }
@@ -197,7 +257,7 @@ module.exports = class Playlist {
         this.loop = !this.loop;
         let song = this.songs[0];
         if (this.loop) {
-            this.sendMessageEmbed(song, 'Loop enable.', guildMember);
+            this.sendMessageSong(song, 'Loop enable.', guildMember);
         } else {
             this.sendMessage(`Loop disable`, `${guildMember}`);
         }
@@ -216,7 +276,7 @@ module.exports = class Playlist {
             let duration = format(song.length_seconds * 1000);
             messageContent += `\:musical_note: **${song.title}** ${duration} ${song.url}\n`;
         }
-        guildMember.send(messageContent);
+        guildMember.send(messageContent, {split: true});
     }
 
     /**
@@ -239,7 +299,7 @@ module.exports = class Playlist {
      * @param action {string}
      * @param guildMember {GuildMember}
      */
-    sendMessageEmbed(song, action, guildMember) {
+    sendMessageSong(song, action, guildMember) {
         let duration = format(song.length_seconds * 1000);
         if (!guildMember) {
             guildMember = song.guildMember;
@@ -249,6 +309,33 @@ module.exports = class Playlist {
             .setTitle(song.title)
             .setURL(song.url)
             .setDescription(`${action} ${guildMember} | Durée : ${duration}`);
+        this.textChannel.send(messageEmbed).then(m => {
+            botsManager.getMessageRecap(this.textChannel.guild);
+        });
+    }
+
+    /**
+     * @param playlistData {Object}
+     * @param songs {Object[]}
+     * @param action {string}
+     * @param guildMember {GuildMember}
+     */
+    sendMessageSongs(playlistData, songs, action, guildMember) {
+        const messageEmbed = new MessageEmbed()
+            .setColor(this.color)
+            .setTitle(playlistData.title)
+            .setURL(playlistData.url)
+            .setDescription(`${action} ${guildMember}`);
+
+        for (const key in songs) {
+            const song = songs[key];
+            let duration = format(song.length_seconds * 1000);
+            messageEmbed.addField(
+                `Durée : ${duration}`,
+                `[${song.title}](${song.url})`
+            );
+        }
+
         this.textChannel.send(messageEmbed).then(m => {
             botsManager.getMessageRecap(this.textChannel.guild);
         });

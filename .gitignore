@@ -4,3 +4,4 @@
 /node_modules/
 /config.json
 config-textchannel.json
+/config.json.backup

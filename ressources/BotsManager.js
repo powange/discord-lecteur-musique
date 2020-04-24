@@ -36,8 +36,11 @@ class BotsManager {
 
         for (let key in bots) {
             let botConfig = bots[key];
-            let bot = this.addBot(botConfig.icon, botConfig.color, botConfig.token);
-            if(typeof(botConfig.main) !== "undefined" && botConfig.main){
+            let isMain = (typeof(botConfig.main) !== "undefined" && botConfig.main);
+            let options = isMain ? { partials: ['MESSAGE'] } : {}
+            let bot = this.addBot(botConfig.icon, botConfig.color, botConfig.token, options);
+
+            if(isMain){
                 this.botMain = bot;
             }
         }
@@ -51,12 +54,14 @@ class BotsManager {
      * @param icon {string}
      * @param color {string}
      * @param token {string}
+     * @param options {Object}
      */
-    addBot(icon, color, token){
-        let client = new Discord.Client();
+    addBot(icon, color, token, options){
+        let client = new Discord.Client(options);
         client.playlists = new Discord.Collection();
         client.prefix = icon;
         client.color = color;
+        client.reservation = false;
         client.once('ready', () => {
             console.log(`Logged in as "${client.user.tag}"`);
         });
@@ -101,7 +106,7 @@ class BotsManager {
         for (const key in this.clients) {
             let client = this.clients[key];
 
-            if (client.voice.connections.size === 0) {
+            if (client.reservation === false && client.voice.connections.size === 0) {
                 return client;
             }
         }
@@ -109,13 +114,11 @@ class BotsManager {
     }
 
     /**
-     *
-     * @param guild {Guild}
      * @param user {GuildMember}
      * @returns {null|Client}
      */
-    getBotForUser(guild, user) {
-        let voiceChannel = guild.members.cache.get(user.id).voice.channel;
+    getBotForUser(user) {
+        let voiceChannel = user.guild.members.cache.get(user.id).voice.channel;
         if (voiceChannel === null) {
             return null;
         }
@@ -125,8 +128,13 @@ class BotsManager {
             return client;
         }
         client = this.getBotFree();
-        console.log(`Found new bot "${client.user.username}" for user ${user} `);
+
+        if(client !== null){
+            console.log(`Found new bot "${client.user.username}" for user ${user} `);
+            client.reservation = true;
+        }
         return client;
+
     }
 
     /**
@@ -167,14 +175,17 @@ class BotsManager {
                 return p.voiceChannel.guild.id === guild.id && p.songs.length > 0
             }).each(playlist => {
                 let list = [];
-                for (const k in playlist.songs) {
+                for (const k in playlist.songs.slice(0, 5)) {
                     let song = playlist.songs[k];
                     let duration = format(song.length_seconds * 1000);
                     let nickname = song.guildMember.nickname;
                     if(!nickname){
                         nickname = song.guildMember.user.username;
                     }
-                    list.push(` [${song.title}](${song.url}) ${duration} add by ${nickname}`);
+                    list.push(`[${song.title}](${song.url}) ${duration} add by ${nickname}`);
+                }
+                if(playlist.songs.length > 5){
+                    list.push(`+` + (playlist.songs.length - 5) + ' vidéos');
                 }
                 messageEmbed.addField(
                     `${playlist.prefix} ${client.user.username} | connecté dans ${playlist.voiceChannel.name}`,
@@ -185,8 +196,8 @@ class BotsManager {
         }
 
         const textChannel = guild.channels.cache.get(textChannelID);
-        if(messageRecapID && textChannel.messages.cache.get(messageRecapID) !== undefined){
-            await textChannel.messages.cache.get(messageRecapID).delete();
+        if(messageRecapID){
+            await textChannel.messages.delete(messageRecapID).catch(err => console.log('Ancien message de recap introuvable.'));
         }
 
         textChannel.send(messageEmbed).then(message => {

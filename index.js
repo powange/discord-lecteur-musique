@@ -11,7 +11,7 @@
 
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
-const Playslist = require('./ressources/Playlist');
+const Playlist = require('./ressources/Playlist');
 const {commands, APIKey} = require('./config.json');
 
 let ConfigTextChannel = require('./ressources/configTextChannel');
@@ -49,12 +49,12 @@ clientMain.on('message', async message => {
         return;
     }
 
-    const clientUser = botsManager.getBotForUser(message.guild, message.member);
+    const clientUser = botsManager.getBotForUser(message.member);
 
     const textChannel = message.channel;
     const voiceChannel = botsManager.getChannelFromBot(clientUser, message.member.voice.channel);
 
-    if(!clientUser){
+    if (!clientUser) {
         senMessageError(message, `Aucun lecteur de musique n'est disponible.`);
         return;
     }
@@ -65,68 +65,71 @@ clientMain.on('message', async message => {
         return;
     }
 
-    const playlist = clientUser.playlists.get(message.guild.id);
+    /**
+     *  @type {Playlist}
+     */
+    var playlist = clientUser.playlists.get(message.guild.id);
 
     if (!playlist) {
-        const playlist = new Playslist(textChannel, voiceChannel, clientUser.prefix, clientUser.color);
+        playlist = new Playlist(clientUser, textChannel, voiceChannel, clientUser.prefix, clientUser.color);
         clientUser.playlists.set(message.guild.id, playlist);
     }
-    /** @var playlist {Playslist} */
 
-    if (commands.skip.indexOf(message.content) >= 0) {
-        playlist.skip(message.member);
-    }
-    else if (commands.pause.indexOf(message.content) >= 0) {
-        playlist.pause(message.member);
-    }
-    else if (commands.resume.indexOf(message.content) >= 0) {
-        playlist.resume(message.member);
-    }
-    else if (commands.stop.indexOf(message.content) >= 0) {
-        playlist.stop(message.member);
-    }
-    else if (commands.loop.indexOf(message.content) >= 0) {
-        playlist.switchLoop(message.member);
-    }
-    else if (commands.loop.indexOf(message.content) >= 0) {
-        playlist.switchLoop(message.member);
-    }
-    else if (commands.queue.indexOf(message.content) >= 0) {
-        playlist.getQueue(message.member);
-    }
-    else if (message.content === 'recap') {
-        botsManager.getMessageRecap(message.guild);
-    } else if (ytdl.validateURL(message.content)) {
-
-        await execute(
-            clientUser,
-            clientUser.guilds.cache.get(message.guild.id),
-            botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
-            message.content,
-            message.member
-        ).catch(err => {
-            senMessageError(message, err.message);
-        });
-    } else {
-        const videos = await youtube.searchVideos(message.content, 1).catch(err => console.log(err));
-
-
-        if (videos.length) {
-            let video = videos[0];
-            await execute(
-                clientUser,
-                clientUser.guilds.cache.get(message.guild.id),
-                botsManager.getChannelFromBot(clientUser, message.member.voice.channel),
-                video.url,
-                message.member
-            ).catch(err => {
+    try {
+        if (commands.skip.indexOf(message.content) >= 0) {
+            playlist.skip(message.member);
+        } else if (commands.pause.indexOf(message.content) >= 0) {
+            playlist.pause(message.member);
+        } else if (commands.resume.indexOf(message.content) >= 0) {
+            playlist.resume(message.member);
+        } else if (commands.stop.indexOf(message.content) >= 0) {
+            playlist.stop(message.member);
+        } else if (commands.loop.indexOf(message.content) >= 0) {
+            playlist.switchLoop(message.member);
+        } else if (commands.loop.indexOf(message.content) >= 0) {
+            playlist.switchLoop(message.member);
+        } else if (commands.queue.indexOf(message.content) >= 0) {
+            playlist.getQueue(message.member);
+        } else if (message.content === 'recap') {
+            botsManager.getMessageRecap(message.guild);
+        } else if (ytdl.validateURL(message.content)) {
+            await playlist.addSong(message.content, message.member).catch(err => {
                 senMessageError(message, err.message);
             });
+        } else if(validateURLPlaylist(message.content)) {
+            youtube.getPlaylist(message.content)
+                .then(playlistYoutube => {
+                    playlistYoutube.getVideos().then(videos => {
+                        playlist.addPlaylist(playlistYoutube, videos, message.member).catch(err => {
+                            senMessageError(message, err.message);
+                        });
+                    }).catch(err => {
+                        senMessageError(message, err.message);
+                    });
+
+
+                    console.log(`The playlist's title is ${playlistYoutube.title}`);
+                })
+                .catch(console.log);
+        } else {
+            const videos = await youtube.searchVideos(message.content, 1).catch(err => console.log(err));
+
+            if (videos.length) {
+                let video = videos[0];
+
+                await playlist.addSong(video.url, message.member).catch(err => {
+                    senMessageError(message, err.message);
+                });
+            }
         }
+
+
+        message.delete();
+
+    } catch (e) {
+        clientUser.reservation = false;
+        console.log(e);
     }
-
-
-    message.delete();
 });
 
 clientMain.on('voiceStateUpdate', (oldMember, newMember) => {
@@ -134,53 +137,28 @@ clientMain.on('voiceStateUpdate', (oldMember, newMember) => {
 
     let oldUserChannel = oldMember.channel;
 
-    if(oldUserChannel === null) return;
+    if (oldUserChannel === null) return;
 
     bot = botsManager.getBotInVoiceChannel(oldUserChannel);
-    if(bot !== null && oldUserChannel.members.size === 1) {
+    if (bot !== null && oldUserChannel.members.size === 1) {
         const playlist = bot.playlists.get(oldMember.guild.id);
-        if(playlist){
+        if (playlist) {
             playlist.stop();
         }
     }
 });
 
-/**
- *
- * @param client {Client}
- * @param guild {Guild}
- * @param voiceChannel {VoiceChannel}
- * @param url {string}
- * @param guildMember {GuildMember}
- * @returns {Promise<void>}
- */
-async function execute(client, guild, voiceChannel, url, guildMember) {
-    let playlist = client.playlists.get(guild.id);
+function validateURLPlaylist(url){
+    const Playlist = require('simple-youtube-api/src/structures/Playlist');
+    return Playlist.extractID(url);
 
-    if (!playlist) {
-        const playlist = new Playslist();
-        playlist.textChannel = clientMain
-            .guilds.cache.get(guild.id)
-            .channels.cache.get(configTextChannel.getTextChannelID(guild));
-        playlist.voiceChannel = voiceChannel;
-        playlist.prefix = client.prefix;
-        playlist.color = client.color;
-
-
-        client.playlists.set(guild.id, playlist);
-
-        await playlist.addSong(url);
-        playlist.play(guildMember);
-    } else {
-        playlist.addSong(url, guildMember);
-    }
 }
 
 /**
  * @param message {Discord.Message}
  * @param messageContent {string}
  */
-function senMessageError(message, messageContent){
+function senMessageError(message, messageContent) {
     console.log(messageContent);
     message.reply(messageContent)
         .then(msg => {
