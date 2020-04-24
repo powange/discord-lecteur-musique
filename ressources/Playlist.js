@@ -66,11 +66,6 @@ module.exports = class Playlist {
     loop = false;
 
     /**
-     * @type {GuildMember|null}
-     */
-    skipStatut = null;
-
-    /**
      * @type {string}
      */
     prefix = '';
@@ -79,11 +74,6 @@ module.exports = class Playlist {
      * @type {string}
      */
     color = '';
-
-    /**
-     * @type {Message}
-     */
-    messageRecap = null;
 
     async join() {
         this.connection = await this.voiceChannel.join().catch(err => {
@@ -171,9 +161,8 @@ module.exports = class Playlist {
 
         const song = this.songs[0];
         if (!song) {
-            let username = this.voiceChannel.client.user.username;
-            this.voiceChannel.leave();
-            this.client.reservation = false;
+            this.end();
+            let username = this.client.user.username;
             this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`);
             return;
         }
@@ -181,15 +170,20 @@ module.exports = class Playlist {
         this.streamDispatcher = await this.connection
             .play(ytdl(song.url, {
                 quality: 'highestaudio',
-                // filter: 'audioonly',
+                filter: 'audioonly',
                 highWaterMark: 1024 * 1024 * 10 // 10 megabytes
             }))
             .on("finish", () => {
                 this.streamDispatcher = null;
-                if (!this.loop) {
-                    this.songs.shift();
+                // Si stop volontaire
+                if (this.songs.length === 0) {
+                    this.end();
+                }else{
+                    if (!this.loop) {
+                        this.songs.shift();
+                    }
+                    this.play();
                 }
-                this.play();
             })
             .on("error", error => console.error(error));
         this.streamDispatcher.setVolume(this.volume);
@@ -225,16 +219,17 @@ module.exports = class Playlist {
         if (this.connection === null) {
             return;
         }
-        let username = this.connection.client.user.username;
+        let username = this.client.user.username;
         let dispatcher = this.connection.dispatcher;
         if (dispatcher !== null) {
             dispatcher.end();
         }
-        if (guildMember) {
-            this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`, `stoppping by ${guildMember}`);
-        } else {
-            this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`);
-        }
+        this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`, `stoppping by ${guildMember}`);
+    }
+
+    end() {
+        this.voiceChannel.leave();
+        this.client.reservation = false;
     }
 
     /**
@@ -242,7 +237,6 @@ module.exports = class Playlist {
      * @returns {Promise<void>}
      */
     async skip(guildMember) {
-        this.skipStatut = guildMember;
         this.connection.dispatcher.on("finish", () => {
             let song = this.songs[0];
             this.sendMessageSong(song, ':track_next: skipping.', guildMember);

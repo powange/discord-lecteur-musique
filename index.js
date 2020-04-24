@@ -106,9 +106,6 @@ clientMain.on('message', async message => {
                     }).catch(err => {
                         senMessageError(message, err.message);
                     });
-
-
-                    console.log(`The playlist's title is ${playlistYoutube.title}`);
                 })
                 .catch(console.log);
         } else {
