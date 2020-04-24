@@ -178,7 +178,7 @@ module.exports = class Playlist {
                 // Si stop volontaire
                 if (this.songs.length === 0) {
                     this.end();
-                }else{
+                } else {
                     if (!this.loop) {
                         this.songs.shift();
                     }
@@ -224,7 +224,11 @@ module.exports = class Playlist {
         if (dispatcher !== null) {
             dispatcher.end();
         }
-        this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`, `stoppping by ${guildMember}`);
+        if(guildMember){
+            this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`, `stopping by ${guildMember}`);
+        }else{
+            this.sendMessage(`:stop_button: ${username} est de nouveau disponible.`);
+        }
     }
 
     end() {
