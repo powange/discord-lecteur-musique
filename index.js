@@ -49,7 +49,7 @@ clientMain.on('message', async message => {
         return;
     }
 
-    if(message.member.voice.channel.id === message.guildafkChannelID){
+    if(message.member.voice.channel.id === message.guild.afkChannelID){
         senMessageError(message, `You can't play music in the AFK voice channel!`);
         return;
     }
