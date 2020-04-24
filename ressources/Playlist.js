@@ -267,15 +267,28 @@ module.exports = class Playlist {
      * @param guildMember {GuildMember}
      */
     getQueue(guildMember) {
-        let messageContent = this.prefix + "  Voici la playlist actuelle :\n";
+        const messageContent = new MessageEmbed()
+            .setColor(this.color)
+            .setTitle(playlistData.title)
+            .setURL(playlistData.url)
+            .setDescription(`${action} ${guildMember}`);
+
         let song = this.songs[0];
         let duration = format(song.length_seconds * 1000);
-        messageContent += `\:arrow_forward: **${song.title}** ${duration} ${song.url}\n`
-        for (let key in this.songs.slice(1)) {
-            let song = this.songs[key];
+        messageContent.addField(
+            `\:arrow_forward: Durée : ${duration}`,
+            `[${song.title}](${song.url})`
+        );
+
+        for (const key in this.songs.slice(1)) {
+            const song = this.songs[key];
             let duration = format(song.length_seconds * 1000);
-            messageContent += `\:musical_note: **${song.title}** ${duration} ${song.url}\n`;
+            messageContent.addField(
+                `Durée : ${duration}`,
+                `[${song.title}](${song.url})`
+            );
         }
+
         guildMember.send(messageContent, {split: true});
     }
 
