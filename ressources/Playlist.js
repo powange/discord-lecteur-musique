@@ -233,7 +233,9 @@ module.exports = class Playlist {
 
     end() {
         this.voiceChannel.leave();
+        this.connection = null;
         this.client.reservation = false;
+        this.client.playlists.delete(this.voiceChannel.guild.id);
     }
 
     /**
