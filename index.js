@@ -49,6 +49,11 @@ clientMain.on('message', async message => {
         return;
     }
 
+    if(message.member.voice.channel.id === message.guildafkChannelID){
+        senMessageError(message, `You can't play music in the AFK voice channel!`);
+        return;
+    }
+
     const clientUser = botsManager.getBotForUser(message.member);
 
     const textChannel = message.channel;

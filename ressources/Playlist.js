@@ -269,9 +269,7 @@ module.exports = class Playlist {
     getQueue(guildMember) {
         const messageContent = new MessageEmbed()
             .setColor(this.color)
-            .setTitle(playlistData.title)
-            .setURL(playlistData.url)
-            .setDescription(`${action} ${guildMember}`);
+            .setTitle('Voici la liste de lecture :');
 
         let song = this.songs[0];
         let duration = format(song.length_seconds * 1000);
