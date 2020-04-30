@@ -99,9 +99,9 @@ module.exports = class Playlist {
 
             if (this.streamDispatcher === null) {
                 this.play(guildMember);
-                this.sendMessageSong(song, ':arrow_forward: playing.');
+                this.sendMessageSong(song, ':arrow_forward: playing.', guildMember);
             } else {
-                this.sendMessageSong(song, ':musical_note: has been added to the queue.');
+                this.sendMessageSong(song, ':musical_note: has been added to the queue.', guildMember);
             }
         } catch (e) {
             this.sendMessage(`${url} : ${e.message}`);
@@ -187,6 +187,10 @@ module.exports = class Playlist {
             })
             .on("error", error => console.error(error));
         this.streamDispatcher.setVolume(this.volume);
+
+        if(!guildMember){
+            this.sendMessageSong(song, ':arrow_forward: playing.');
+        }
     }
 
     /**
@@ -236,6 +240,7 @@ module.exports = class Playlist {
         this.connection = null;
         this.client.reservation = false;
         this.client.playlists.delete(this.voiceChannel.guild.id);
+        botsManager.getMessageRecap(this.textChannel.guild);
     }
 
     /**

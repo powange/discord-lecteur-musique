@@ -18,5 +18,8 @@
     "fs": "0.0.1-security",
     "simple-youtube-api": "^5.2.1",
     "ytdl-core": "^2.0.1"
+  },
+  "engines": {
+    "node": ">=12"
   }
 }
