@@ -143,7 +143,7 @@ clientMain.on('voiceStateUpdate', (oldMember, newMember) => {
     if (oldUserChannel === null) return;
 
     bot = botsManager.getBotInVoiceChannel(oldUserChannel);
-    if (bot !== null && oldUserChannel.members.size === 1) {
+    if (bot !== null && oldUserChannel.members.filter(gm => gm.user.bot === false).size === 0) {
         const playlist = bot.playlists.get(oldMember.guild.id);
         if (playlist) {
             playlist.stop();
