@@ -240,7 +240,6 @@ module.exports = class Playlist {
         this.connection = null;
         this.client.reservation = false;
         this.client.playlists.delete(this.voiceChannel.guild.id);
-        botsManager.getMessageRecap(this.textChannel.guild);
     }
 
     /**
