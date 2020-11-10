@@ -1,5 +1,6 @@
 const {VoiceConnection, TextChannel, VoiceChannel, StreamDispatcher, Message, MessageEmbed} = require('discord.js');
 const ytdl = require('ytdl-core');
+const ytdlDiscord = require('ytdl-core-discord');
 const PlaylistYoutube = require('simple-youtube-api/src/structures/Playlist');
 const format = require('format-duration');
 
@@ -168,11 +169,12 @@ module.exports = class Playlist {
         }
 
         this.streamDispatcher = await this.connection
-            .play(ytdl(song.url, {
-                quality: 'highestaudio',
-                filter: 'audioonly',
-                highWaterMark: 1024 * 1024 * 10 // 10 megabytes
-            }))
+            .play(await ytdlDiscord(song.url), { type: 'opus' })
+            // .play(ytdl(song.url, {
+            //     quality: 'highestaudio',
+            //     filter: 'audioonly',
+            //     highWaterMark: 1024 * 1024 * 10 // 10 megabytes
+            // }))
             .on("finish", () => {
                 this.streamDispatcher = null;
                 // Si stop volontaire
