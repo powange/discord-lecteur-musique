@@ -90,9 +90,9 @@ module.exports = class Playlist {
         try {
             const songInfo = await ytdl.getInfo(url);
             const song = {
-                title: songInfo.title,
-                url: songInfo.video_url,
-                length_seconds: songInfo.length_seconds,
+                title: songInfo.videoDetails.title,
+                url: songInfo.videoDetails.video_url,
+                length_seconds: songInfo.videoDetails.lengthSeconds,
                 guildMember: guildMember
             };
             this.songs.push(song);

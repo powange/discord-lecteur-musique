@@ -36,6 +36,9 @@ module.exports = class ConfigTextChannel {
      * @returns {string}
      */
     getTextChannelID(guild){
+        if(!this.textChannelsID.hasOwnProperty(guild.id)){
+            return null;
+        }
         return this.textChannelsID[guild.id].textChannelID;
     }
 
@@ -44,6 +47,9 @@ module.exports = class ConfigTextChannel {
      * @returns {string}
      */
     getMessageRecapID(guild){
+        if(!this.textChannelsID.hasOwnProperty(guild.id)){
+            return null;
+        }
         return this.textChannelsID[guild.id].messageRecapID;
     }
 
